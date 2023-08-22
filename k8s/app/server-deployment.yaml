@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: python-server
+  namespace: sample
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: python-server
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: python-server
+    spec:
+      containers:
+        - image: hamedsalim1999/hemnet-task-app:latest
+          name: python-server
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: 3G
+            requests:
+              memory: 1G
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - if [ $(curl -LI http://localhost:8080 -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then exit -1; else echo "OK" ; fi
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - if [ $(curl -LI http://localhost:8080 -o /dev/null -w '%{http_code}\n' -s) == "200" ]; then exit -1; else echo "OK" ; fi
+            timeoutSeconds: 5
+            failureThreshold: 2
+            periodSeconds: 20
+          
